@@ -4,7 +4,7 @@ namespace mergeSortLogs
 {
     internal class Program
     {
-       
+
         public static List<String> guids = new List<String>();
         public static List<String> lines = new List<String>();
 
@@ -13,6 +13,18 @@ namespace mergeSortLogs
 
         {
             string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            using var watcher = new FileSystemWatcher();
+            watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            watcher.IncludeSubdirectories = true;
+            watcher.Changed += OnChanged;
+            watcher.NotifyFilter = NotifyFilters.FileName |
+                                             NotifyFilters.DirectoryName |
+                                             NotifyFilters.LastWrite |
+                                             NotifyFilters.Size;
+
+            // Watch all files
+            watcher.Filter = ".log";
+            watcher.EnableRaisingEvents = true;
 
             string stop = "";
             while (stop != "stop")
@@ -20,18 +32,7 @@ namespace mergeSortLogs
                 Console.WriteLine("Type 'stop' to end:");
                 stop = Console.ReadLine();
 
-                using var watcher = new FileSystemWatcher();
-                watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
-                watcher.IncludeSubdirectories = true;
-                watcher.Changed += OnChanged;
-                watcher.NotifyFilter = NotifyFilters.FileName |
-                                                 NotifyFilters.DirectoryName |
-                                                 NotifyFilters.LastWrite |
-                                                 NotifyFilters.Size;
 
-                // Watch all files
-                watcher.Filter = ".log";
-                watcher.EnableRaisingEvents = true;
 
                 // Determine log folder
                 string logFolder = args.Length > 0 ? args[0] : "logs";
@@ -40,7 +41,7 @@ namespace mergeSortLogs
                 // Get base directory
 
 
-               List<string> directories= GetDirectories(unsortedLogs);
+                List<string> directories = GetDirectories(unsortedLogs);
                 // Ensure GUID Unique in Sorted File
                 foreach (string f in directories)
                 {
@@ -88,7 +89,7 @@ namespace mergeSortLogs
 
         private static List<string> GetDirectories(string path)
         {
-             List<String> files = new List<String>();
+            List<String> files = new List<String>();
             Console.WriteLine($"{DateTime.Now}: Target Directory: {path}");
 
             // Get all log files
