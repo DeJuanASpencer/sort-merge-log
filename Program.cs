@@ -4,8 +4,8 @@ namespace mergeSortLogs
 {
     internal class Program
     {
-        public static List<String> guids = new List<String>();
-        public static List<String> lines = new List<String>();
+        public static List<string> guids = new List<string>();
+        public static List<string> lines = new List<string>();
         public static async Task<int> Main(string[] args)
 
         {
@@ -32,7 +32,7 @@ namespace mergeSortLogs
 
         private static List<string> GetDirectories(string path)
         {
-            List<String> files = new List<String>();
+            List<string> files = new List<string>();
             if (Directory.Exists(path))
             {
 
