@@ -12,7 +12,11 @@ namespace mergeSortLogs
         public static async Task<int> Main(string[] args)
 
         {
+
+
             string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            // Determine log folder
+            string logFolder = args.Length > 0 ? args[0] : unsortedLogs;
             using var watcher = new FileSystemWatcher();
             watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
             watcher.IncludeSubdirectories = true;
@@ -32,45 +36,10 @@ namespace mergeSortLogs
                 Console.WriteLine("Type 'stop' to end:");
                 stop = Console.ReadLine();
 
-
-
-                // Determine log folder
-                string logFolder = args.Length > 0 ? args[0] : "logs";
-
-                string sortedLogs = @"C:\archive";
-                // Get base directory
-
-
                 List<string> directories = GetDirectories(unsortedLogs);
                 // Ensure GUID Unique in Sorted File
-                foreach (string f in directories)
-                {
-                    // TODO Stream line by line (reading and writing) instead of reading all lines at once
-                    List<string> filelines = File.ReadAllLines(f).ToList();
-                    foreach (string fileline in filelines)
-                    {
-                        Console.WriteLine("File Line: " + fileline);
-                        string guid = fileline.Split(' ')[2];
-                        if (!guids.Contains(guid))
-                        {
-                            guids.Add(guid);
-                            lines.AddRange(fileline);
-                            lines.Sort();
-                            Console.WriteLine("Adding GUID: " + guid);
-                            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"C:\Users\dspencer\code\mergeSortLogs", "sortMergeLogs.txt")))
-                            {
-                                await outputFile.WriteAsync(string.Join("\n", lines));
-                                lines.Sort();
-                            }
+                await WriteLines(directories);
 
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Duplicate GUID found: {guid}");
-                        }
-
-                    }
-                }
 
                 if (!Directory.Exists(unsortedLogs))
                 {
@@ -81,7 +50,7 @@ namespace mergeSortLogs
                 }
             }
 
-            Console.WriteLine("Found log files...");
+            
 
             return 0;
 
@@ -104,6 +73,38 @@ namespace mergeSortLogs
                 }
             }
             return files;
+        }
+
+        private static async Task WriteLines(List<string> directories)
+        {
+            foreach (string f in directories)
+            {
+                // TODO Stream line by line (reading and writing) instead of reading all lines at once
+                List<string> filelines = File.ReadAllLines(f).ToList();
+                foreach (string fileline in filelines)
+                {
+                    Console.WriteLine("File Line: " + fileline);
+                    string guid = fileline.Split(' ')[2];
+                    if (!guids.Contains(guid))
+                    {
+                        guids.Add(guid);
+                        lines.AddRange(fileline);
+                        lines.Sort();
+                        Console.WriteLine("Adding GUID: " + guid);
+                        using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"C:\Users\dspencer\code\mergeSortLogs", "sortMergeLogs.txt")))
+                        {
+                            await outputFile.WriteAsync(string.Join("\n", lines));
+                            lines.Sort();
+                        }
+
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Duplicate GUID found: {guid}");
+                    }
+
+                }
+            }
         }
 
         private static void OnChanged(object sender, FileSystemEventArgs e)
