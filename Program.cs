@@ -4,13 +4,15 @@ namespace mergeSortLogs
 {
     internal class Program
     {
-        public static List<String> files = new List<String>();
+       
         public static List<String> guids = new List<String>();
         public static List<String> lines = new List<String>();
+
 
         public static async Task<int> Main(string[] args)
 
         {
+            string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
 
             string stop = "";
             while (stop != "stop")
@@ -33,26 +35,14 @@ namespace mergeSortLogs
 
                 // Determine log folder
                 string logFolder = args.Length > 0 ? args[0] : "logs";
-                string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+
                 string sortedLogs = @"C:\archive";
                 // Get base directory
 
-                Console.WriteLine($"{DateTime.Now}: Source Directory: {unsortedLogs}");
-                Console.WriteLine($"{DateTime.Now}: Target Directory: {sortedLogs}");
 
-                // Get all log files
-                foreach (string d in Directory.GetDirectories(unsortedLogs))
-                {
-                    Console.WriteLine("Dir: " + d);
-                    foreach (string f in Directory.GetFiles(d))
-                    {
-                        Console.WriteLine("Found file in subdir: ");
-                        files.Add(f);
-                        Console.WriteLine(files.Count + ": " + f);
-                    }
-                }
+               List<string> directories= GetDirectories(unsortedLogs);
                 // Ensure GUID Unique in Sorted File
-                foreach (string f in files)
+                foreach (string f in directories)
                 {
                     // TODO Stream line by line (reading and writing) instead of reading all lines at once
                     List<string> filelines = File.ReadAllLines(f).ToList();
@@ -94,6 +84,25 @@ namespace mergeSortLogs
 
             return 0;
 
+        }
+
+        private static List<string> GetDirectories(string path)
+        {
+             List<String> files = new List<String>();
+            Console.WriteLine($"{DateTime.Now}: Target Directory: {path}");
+
+            // Get all log files
+            foreach (string d in Directory.GetDirectories(path))
+            {
+                Console.WriteLine("Dir: " + d);
+                foreach (string f in Directory.GetFiles(d))
+                {
+                    Console.WriteLine("Found file in subdir: ");
+                    files.Add(f);
+                    Console.WriteLine(files.Count + ": " + f);
+                }
+            }
+            return files;
         }
 
         private static void OnChanged(object sender, FileSystemEventArgs e)
