@@ -1,0 +1,110 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace mergeSortLogs
+{
+    internal class Program
+    {
+        public static List<String> files = new List<String>();
+        public static List<String> guids = new List<String>();
+        public static List<String> lines = new List<String>();
+
+        public static async Task<int> Main(string[] args)
+
+        {
+
+            string stop = "";
+            while (stop != "stop")
+            {
+                Console.WriteLine("Type 'stop' to end:");
+                stop = Console.ReadLine();
+
+                using var watcher = new FileSystemWatcher();
+                watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+                watcher.IncludeSubdirectories = true;
+                watcher.Changed += OnChanged;
+                watcher.NotifyFilter = NotifyFilters.FileName |
+                                                 NotifyFilters.DirectoryName |
+                                                 NotifyFilters.LastWrite |
+                                                 NotifyFilters.Size;
+
+                // Watch all files
+                watcher.Filter = ".log";
+                watcher.EnableRaisingEvents = true;
+
+                // Determine log folder
+                string logFolder = args.Length > 0 ? args[0] : "logs";
+                string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+                string sortedLogs = @"C:\archive";
+                // Get base directory
+
+                Console.WriteLine($"{DateTime.Now}: Source Directory: {unsortedLogs}");
+                Console.WriteLine($"{DateTime.Now}: Target Directory: {sortedLogs}");
+
+                // Get all log files
+                foreach (string d in Directory.GetDirectories(unsortedLogs))
+                {
+                    Console.WriteLine("Dir: " + d);
+                    foreach (string f in Directory.GetFiles(d))
+                    {
+                        Console.WriteLine("Found file in subdir: ");
+                        files.Add(f);
+                        Console.WriteLine(files.Count + ": " + f);
+                    }
+                }
+                // Ensure GUID Unique in Sorted File
+                foreach (string f in files)
+                {
+                    // TODO Stream line by line (reading and writing) instead of reading all lines at once
+                    List<string> filelines = File.ReadAllLines(f).ToList();
+                    foreach (string fileline in filelines)
+                    {
+                        Console.WriteLine("File Line: " + fileline);
+                        string guid = fileline.Split(' ')[2];
+                        if (!guids.Contains(guid))
+                        {
+                            guids.Add(guid);
+                            lines.AddRange(fileline);
+                            lines.Sort();
+                            Console.WriteLine("Adding GUID: " + guid);
+                            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"C:\Users\dspencer\code\mergeSortLogs", "sortMergeLogs.txt")))
+                            {
+                                await outputFile.WriteAsync(string.Join("\n", lines));
+                                lines.Sort();
+                            }
+
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Duplicate GUID found: {guid}");
+                        }
+
+                    }
+                }
+
+                if (!Directory.Exists(unsortedLogs))
+                {
+                    Console.WriteLine($"Error: Parameter file '{logFolder}' not found.");
+                    Console.WriteLine("Usage: LoggerApplication [parameterFile]");
+                    Console.WriteLine("parameterFile: Path to file containing logger parameters (default: params.txt)");
+                    return 1;
+                }
+            }
+
+            Console.WriteLine("Found log files...");
+
+            return 0;
+
+        }
+
+        private static void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            if (e.ChangeType != WatcherChangeTypes.Changed)
+            {
+                Console.WriteLine("Ignored: {e.FullPath}");
+                return;
+            }
+            Console.WriteLine($"Changed: {e.FullPath}");
+        }
+
+    }
+}

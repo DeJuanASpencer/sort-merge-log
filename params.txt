@@ -1,0 +1,12 @@
+# Log File Generator - Parameter File
+# Format: <avgMillisecondsBetweenLogs> <maxFileSizeMB> <logDirectory>
+# Each line simulates a separate application
+
+# Fast logger - generates logs every ~100ms with 1MB file limit
+ #100 1 ./logs/app1
+
+# Medium logger - generates logs every ~200ms with 2MB file limit
+ #200 2 ./logs/app2
+
+# Slow logger - generates logs every ~500ms with 5MB file limit
+  500 5 ./logs/app3

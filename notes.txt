@@ -1,0 +1,11 @@
+look into unit tests
+
+flex algo muscle (grrr)
+
+more structure
+
+git
+
+where does it make sense for recursion
+
+.net logger interfaces. Specify logging verbosity (debug, error...)
