@@ -10,10 +10,21 @@ namespace mergeSortLogs
 
         {
 
-            string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            string unsortedLogs = @"C:\Users\dspencer\code\sort-merge-log\logs";
             // Determine log folder
             string logFolder = args.Length > 0 ? args[0] : unsortedLogs;
-            Watcher(unsortedLogs);
+
+            Console.WriteLine("Starting watcher...");
+            using var watcher = new FileSystemWatcher(@"C:\Users\dspencer\code\sort-merge-log\logs\", "*.log");
+            watcher.IncludeSubdirectories = true;
+            watcher.InternalBufferSize = 65536; // 64KB
+            watcher.NotifyFilter = NotifyFilters.FileName |
+                                             NotifyFilters.DirectoryName |
+                                             NotifyFilters.LastWrite |
+                                             NotifyFilters.Size;
+            watcher.Changed += OnChanged;
+
+            watcher.EnableRaisingEvents = true;
 
             string stop = "";
             while (stop != "stop")
@@ -22,6 +33,8 @@ namespace mergeSortLogs
                 stop = Console.ReadLine() ?? "";
 
                 List<string> directories = GetDirectories(unsortedLogs);
+
+                
                 // Ensure GUID Unique in Sorted File
                 await WriteLines(directories);
             }
@@ -60,21 +73,6 @@ namespace mergeSortLogs
             return files;
         }
 
-        private static void Watcher(string path)
-        {
-            using var watcher = new FileSystemWatcher();
-            watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
-            watcher.IncludeSubdirectories = true;
-            watcher.Changed += OnChanged;
-            watcher.NotifyFilter = NotifyFilters.FileName |
-                                             NotifyFilters.DirectoryName |
-                                             NotifyFilters.LastWrite |
-                                             NotifyFilters.Size;
-
-            // Watch all files
-            watcher.Filter = ".log";
-            watcher.EnableRaisingEvents = true;
-        }
         private static async Task WriteLines(List<string> directories)
         {
             foreach (string f in directories)
@@ -109,6 +107,7 @@ namespace mergeSortLogs
 
         private static void OnChanged(object sender, FileSystemEventArgs e)
         {
+
             if (e.ChangeType != WatcherChangeTypes.Changed)
             {
                 Console.WriteLine("Ignored: {e.FullPath}");
