@@ -4,44 +4,42 @@ namespace mergeSortLogs
 {
     internal class Program
     {
-        public static List<String> files = new List<String>();
-        public static List<String> guids = new List<String>();
-        public static List<String> lines = new List<String>();
-
+        public static List<string> guids = new List<string>();
+        public static List<string> lines = new List<string>();
         public static async Task<int> Main(string[] args)
 
         {
+
+            string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            // Determine log folder
+            string logFolder = args.Length > 0 ? args[0] : unsortedLogs;
+            Watcher(unsortedLogs);
 
             string stop = "";
             while (stop != "stop")
             {
                 Console.WriteLine("Type 'stop' to end:");
-                stop = Console.ReadLine();
+                stop = Console.ReadLine() ?? "";
 
-                using var watcher = new FileSystemWatcher();
-                watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
-                watcher.IncludeSubdirectories = true;
-                watcher.Changed += OnChanged;
-                watcher.NotifyFilter = NotifyFilters.FileName |
-                                                 NotifyFilters.DirectoryName |
-                                                 NotifyFilters.LastWrite |
-                                                 NotifyFilters.Size;
+                List<string> directories = GetDirectories(unsortedLogs);
+                // Ensure GUID Unique in Sorted File
+                await WriteLines(directories);
+            }
 
-                // Watch all files
-                watcher.Filter = ".log";
-                watcher.EnableRaisingEvents = true;
+            return 0;
 
-                // Determine log folder
-                string logFolder = args.Length > 0 ? args[0] : "logs";
-                string unsortedLogs = @"C:\Users\dspencer\code\mergeSortLogs\logs";
-                string sortedLogs = @"C:\archive";
-                // Get base directory
+        }
 
-                Console.WriteLine($"{DateTime.Now}: Source Directory: {unsortedLogs}");
-                Console.WriteLine($"{DateTime.Now}: Target Directory: {sortedLogs}");
+        private static List<string> GetDirectories(string path)
+        {
+            List<string> files = new List<string>();
+            if (Directory.Exists(path))
+            {
+
+                Console.WriteLine($"{DateTime.Now}: Target Directory: {path}");
 
                 // Get all log files
-                foreach (string d in Directory.GetDirectories(unsortedLogs))
+                foreach (string d in Directory.GetDirectories(path))
                 {
                     Console.WriteLine("Dir: " + d);
                     foreach (string f in Directory.GetFiles(d))
@@ -51,49 +49,62 @@ namespace mergeSortLogs
                         Console.WriteLine(files.Count + ": " + f);
                     }
                 }
-                // Ensure GUID Unique in Sorted File
-                foreach (string f in files)
-                {
-                    // TODO Stream line by line (reading and writing) instead of reading all lines at once
-                    List<string> filelines = File.ReadAllLines(f).ToList();
-                    foreach (string fileline in filelines)
-                    {
-                        Console.WriteLine("File Line: " + fileline);
-                        string guid = fileline.Split(' ')[2];
-                        if (!guids.Contains(guid))
-                        {
-                            guids.Add(guid);
-                            lines.AddRange(fileline);
-                            lines.Sort();
-                            Console.WriteLine("Adding GUID: " + guid);
-                            using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"C:\Users\dspencer\code\mergeSortLogs", "sortMergeLogs.txt")))
-                            {
-                                await outputFile.WriteAsync(string.Join("\n", lines));
-                                lines.Sort();
-                            }
+            }
+            else if (!Directory.Exists(path))
+            {
+                Console.WriteLine($"Error: Parameter file '{path}' not found.");
+                Console.WriteLine("Usage: LoggerApplication [parameterFile]");
+                Console.WriteLine("parameterFile: Path to file containing logger parameters (default: params.txt)");
+                return new List<string>();
+            }
+            return files;
+        }
 
-                        }
-                        else
+        private static void Watcher(string path)
+        {
+            using var watcher = new FileSystemWatcher();
+            watcher.Path = @"C:\Users\dspencer\code\mergeSortLogs\logs";
+            watcher.IncludeSubdirectories = true;
+            watcher.Changed += OnChanged;
+            watcher.NotifyFilter = NotifyFilters.FileName |
+                                             NotifyFilters.DirectoryName |
+                                             NotifyFilters.LastWrite |
+                                             NotifyFilters.Size;
+
+            // Watch all files
+            watcher.Filter = ".log";
+            watcher.EnableRaisingEvents = true;
+        }
+        private static async Task WriteLines(List<string> directories)
+        {
+            foreach (string f in directories)
+            {
+                // TODO Stream line by line (reading and writing) instead of reading all lines at once
+                List<string> filelines = File.ReadAllLines(f).ToList();
+                foreach (string fileline in filelines)
+                {
+                    Console.WriteLine("File Line: " + fileline);
+                    string guid = fileline.Split(' ')[2];
+                    if (!guids.Contains(guid))
+                    {
+                        guids.Add(guid);
+                        lines.AddRange(fileline);
+                        lines.Sort();
+                        Console.WriteLine("Adding GUID: " + guid);
+                        using (StreamWriter outputFile = new StreamWriter(Path.Combine(@"C:\Users\dspencer\code\sort-merge-log", "sortMergeLogs.txt")))
                         {
-                            Console.WriteLine($"Duplicate GUID found: {guid}");
+                            await outputFile.WriteAsync(string.Join("\n", lines));
+                            lines.Sort();
                         }
 
                     }
-                }
+                    else
+                    {
+                        Console.WriteLine($"Duplicate GUID found: {guid}");
+                    }
 
-                if (!Directory.Exists(unsortedLogs))
-                {
-                    Console.WriteLine($"Error: Parameter file '{logFolder}' not found.");
-                    Console.WriteLine("Usage: LoggerApplication [parameterFile]");
-                    Console.WriteLine("parameterFile: Path to file containing logger parameters (default: params.txt)");
-                    return 1;
                 }
             }
-
-            Console.WriteLine("Found log files...");
-
-            return 0;
-
         }
 
         private static void OnChanged(object sender, FileSystemEventArgs e)
