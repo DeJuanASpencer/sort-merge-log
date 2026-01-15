@@ -22,7 +22,7 @@ namespace mergeSortLogs
                 stop = Console.ReadLine() ?? "";
 
                 List<string> directories = GetDirectories(unsortedLogs);
-                // Ensure GUID Unique in Sorted File
+          
                 await WriteLines(directories);
             }
 
@@ -77,6 +77,11 @@ namespace mergeSortLogs
         }
         private static async Task WriteLines(List<string> directories)
         {
+
+//             var fileStream = new FileStream(@"C:\Users\dspencer\code\sort-merge-log\sortMergeLogs.txt", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, useAsync: true);
+// fileStream.Seek(0, SeekOrigin.Current);
+
+
             foreach (string f in directories)
             {
                 // TODO Stream line by line (reading and writing) instead of reading all lines at once
