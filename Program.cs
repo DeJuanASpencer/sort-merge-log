@@ -91,13 +91,22 @@ namespace mergeSortLogs
             foreach (string f in directories)
             {
                 Console.WriteLine("Processing file: " + f);
-
+using var writer = new StreamWriter(new FileStream(sortedLogs, FileMode.Append, FileAccess.Write, FileShare.None, 4096, useAsync: true));
                 using var reader = new StreamReader(f);
                 string? line;
 
                 while ((line = await reader.ReadLineAsync())is not null)
                 {
-                    
+           
+
+                    if(DateTime.TryParse(line.Substring(0,23), out DateTime logTime))
+                    {
+                        Console.WriteLine("Parsed timestamp: " + logTime.ToString("o"));
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to parse timestamp from line: " + line);
+                    }
 
                     await writer.WriteLineAsync(line);
                     Console.WriteLine("Wrote line: " + line);
